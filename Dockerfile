@@ -1,18 +1,12 @@
 FROM nginx:latest
-MAINTAINER Keith Chambers
 
-RUN DEBIAN_FRONTEND=noninteractive \
-    apt-get update -qq && \
-    apt-get -y install curl runit && \
-    rm -rf /var/lib/apt/lists/*
+ENTRYPOINT ["/bin/start.sh"]
+EXPOSE 80
+VOLUME /templates
+ENV CONSUL_URL consul:8500
 
-ENV CT_URL https://github.com/hashicorp/consul-template/releases/download/v0.3.1/consul-template_0.3.1_linux_amd64.tar.gz
-RUN curl -L $CT_URL | tar -C /usr/local/bin --strip-components 1 -zxf -
+ADD start.sh /bin/start.sh
+RUN rm -v /etc/nginx/conf.d/*.conf
 
-ADD nginx.service /etc/service/nginx/run
-ADD consul-template.service /etc/service/consul-template/run
-
-RUN rm -v /etc/nginx/conf.d/*
-ADD nginx.conf /etc/consul-templates/nginx.conf
-
-CMD ["/usr/bin/runsvdir", "/etc/service"]
+ADD https://github.com/hashicorp/consul-template/releases/download/v0.7.0/consul-template_0.7.0_linux_amd64.tar.gz /usr/bin/
+RUN tar -C /usr/local/bin --strip-components 1 -zxf /usr/bin/consul-template_0.7.0_linux_amd64.tar.gz
