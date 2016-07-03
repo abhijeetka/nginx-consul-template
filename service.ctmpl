@@ -1,18 +1,38 @@
 upstream python-service {
   least_conn;
-  {{range service "python-micro-service"}}server {{.Address}}:{{.Port}} max_fails=3 fail_timeout=60 weight=1;
+  {{range service "jenkins-8080"}}server {{.Address}}:{{.Port}} max_fails=3 fail_timeout=60 weight=1;
   {{else}}server 127.0.0.1:65535; # force a 502{{end}}
 }
+    include /etc/nginx/mime.types;
 
 server {
   listen 80 default_server;
-
+ 
   charset utf-8;
+  location ~ "^/static/[0-9a-fA-F]{8}\/(.*)$" {
 
-  location ~ ^/python-micro-service/(.*)$ {
+    #rewrite all static files into requests to the root
+    #E.g /static/12345678/css/something.css will become /css/something.css
+    rewrite "^/static/[0-9a-fA-F]{8}\/(.*)" /$1 last;
+  }
+
+  location ~ ^/jenkins-8080/(.*)$ {
     proxy_pass http://python-service/$1$is_args$args;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
+    #this is the maximum upload size
+      client_max_body_size       10m;
+      client_body_buffer_size    128k;
+
+      proxy_connect_timeout      90;
+      proxy_send_timeout         90;
+      proxy_read_timeout         90;
+
+      proxy_buffer_size          4k;
+      proxy_buffers              4 32k;
+      proxy_busy_buffers_size    64k;
+      proxy_temp_file_write_size 64k;
   }
 }
+
