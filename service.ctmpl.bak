@@ -1,6 +1,5 @@
 upstream python-service {
 #  least_conn;
-zone upstream-backend 64k;
   {{range service "python-micro-service"}}server {{.Address}}:{{.Port}} route={{.Node}} max_fails=3 fail_timeout=60 weight=1;
   {{else}}server 127.0.0.1:65535; # force a 502{{end}}
   sticky route $routetarget;
@@ -9,24 +8,15 @@ zone upstream-backend 64k;
 
 server {
   listen 80 default_server;
-	status_zone backend-servers;
+ 
   charset utf-8;
   set $routetarget "node2";
-
+ 
   location ~ ^/python-micro-service/(.*)$ {
     proxy_pass http://python-service/$1$is_args$args;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
   }
-  root /usr/share/nginx/html;
-	location = /status.html { }
-  location = / {
-		return 301 /status.html;
-	}
-  location /status {
-		status;
-		status_format json;
-	}
 }
 

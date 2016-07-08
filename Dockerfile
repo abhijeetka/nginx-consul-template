@@ -30,6 +30,8 @@ ADD start.sh /bin/start.sh
 ADD https://releases.hashicorp.com/consul-template/0.7.0/consul-template_0.7.0_linux_amd64.zip /usr/local/bin/
 RUN unzip /usr/local/bin/consul-template_0.7.0_linux_amd64.zip
 
+ADD status.conf /etc/nginx/conf.d/
+
 ENV CONSUL_URL consul:8500
 VOLUME /templates
 EXPOSE 80 443
