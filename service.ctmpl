@@ -12,7 +12,7 @@ server {
 	status_zone backend-servers;
   charset utf-8;
   set $routetarget "node2";
-
+ 
   location ~ ^/python-micro-service/(.*)$ {
     proxy_pass http://python-service/$1$is_args$args;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -28,5 +28,16 @@ server {
 		status;
 		status_format json;
 	}
+
+
+location /lua {
+         # MIME type determined by default_type:
+         default_type 'text/plain';
+
+         content_by_lua_block {
+             ngx.say('Hello,world!')
+         }
+     }
+
 }
 
